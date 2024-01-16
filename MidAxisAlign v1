@@ -1,0 +1,35 @@
+import bpy
+import mathutils
+
+def get_collection_bbox(collection):
+    bbox_min = mathutils.Vector((float('inf'), float('inf'), float('inf')))
+    bbox_max = mathutils.Vector((-float('inf'), -float('inf'), -float('inf')))
+
+    has_mesh = False
+
+    for obj in collection.objects:
+        if obj.type == 'MESH':
+            has_mesh = True
+            for corner in [obj.matrix_world @ mathutils.Vector(c) for c in obj.bound_box]:
+                bbox_min.x = min(bbox_min.x, corner.x)
+                bbox_max.x = max(bbox_max.x, corner.x)
+
+    return bbox_min, bbox_max, has_mesh
+
+def center_collection_on_x(collection):
+    bbox_min, bbox_max, has_mesh = get_collection_bbox(collection)
+
+    if not has_mesh:
+        return
+
+    midpoint = (bbox_max.x + bbox_min.x) / 2
+
+    offset = -midpoint
+
+    for obj in collection.objects:
+        obj.location.x += offset
+
+for collection in bpy.data.collections:
+    center_collection_on_x(collection)
+
+print("Done")
